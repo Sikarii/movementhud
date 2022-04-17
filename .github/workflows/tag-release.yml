@@ -1,0 +1,41 @@
+name: Publish release
+
+on:
+  push:
+    tags:
+    - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup variables
+      id: vars
+      run: echo ::set-output name=version::${GITHUB_REF#refs/*/}
+
+    - name: Setup SourcePawn Compiler
+      id: setup
+      uses: rumblefrog/setup-sp@v1.1.0
+      with:
+        version: "1.10.x"
+
+    - name: Create plugins directory
+      run: mkdir addons/sourcemod/plugins
+
+    - name: Compile plugins
+      run: |
+        cd addons/sourcemod/scripting
+        for file in *.sp; do spcomp $file -i "include" -o "../plugins/${file%.*}.smx"; done;
+
+    - name: Compress plugins
+      run : |
+        mkdir build
+        zip -r "build/movementhud-${{ steps.vars.outputs.version }}.zip" addons
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "build/movementhud-${{ steps.vars.outputs.version }}.zip"
