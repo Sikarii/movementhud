@@ -40,8 +40,8 @@ public Action Timer_InputTimeout(Handle timer, int userid)
 	int client = GetClientOfUserId(userid);
 	if (client > 0 && IsClientConnected(client))
 	{
-		ResetWaitForPreferenceChatInputFromClient(client);
 		MHud_PrintToChat(client, "\x07Input timed out!\x01");
+		ResetWaitForPreferenceChatInputFromClient(client, true);
 	}
 }
 
@@ -109,8 +109,12 @@ static void HandlePreferenceInput(int client, char preferenceId[MHUD_MAX_ID], ch
     PrintChangeMessage(client, preference);
 }
 
-static void ResetWaitForPreferenceChatInputFromClient(int client)
+static void ResetWaitForPreferenceChatInputFromClient(int client, bool fromTimer = false)
 {
-    delete InputTimer[client];
     InputPreferenceId[client] = "";
+
+    if (!fromTimer)
+    {
+        delete InputTimer[client];
+    }
 }
