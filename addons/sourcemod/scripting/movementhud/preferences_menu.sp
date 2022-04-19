@@ -64,7 +64,7 @@ void DisplayPreferencesMenu(int client, bool advanced, bool fromMainMenu = false
     }
 
     menu.ExitButton = true;
-    menu.ExitBackButton = gB_FromMainMenu[client];
+    menu.ExitBackButton = fromMainMenu;
     menu.DisplayAt(client, displayAt, MENU_TIME_FOREVER);
 }
 
@@ -106,7 +106,7 @@ public int MenuHandler_Preferences(Menu menu, MenuAction action, int param1, int
 
         if (gB_InAdvMode[param1])
         {
-            WaitForPreferenceChatInputFromClient(param1, id);
+            WaitForPreferenceChatInputFromClient(param1, id, menu.Selection);
             return;
         }
 

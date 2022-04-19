@@ -1,4 +1,6 @@
 static Handle InputTimer[MAXPLAYERS + 1];
+
+static int InputMenuSelection[MAXPLAYERS + 1];
 static char InputPreferenceId[MAXPLAYERS + 1][MHUD_MAX_ID];
 
 void OnClientPutInServer_PreferencesChatInput(int client)
@@ -6,7 +8,7 @@ void OnClientPutInServer_PreferencesChatInput(int client)
 	ResetWaitForPreferenceChatInputFromClient(client);
 }
 
-void WaitForPreferenceChatInputFromClient(int client, char preferenceId[MHUD_MAX_ID])
+void WaitForPreferenceChatInputFromClient(int client, char preferenceId[MHUD_MAX_ID], int menuSelection = 0)
 {
     Preference preference;
 
@@ -18,6 +20,7 @@ void WaitForPreferenceChatInputFromClient(int client, char preferenceId[MHUD_MAX
 
     InputTimer[client] = CreateTimeoutTimer(client);
     InputPreferenceId[client] = preferenceId;
+    InputMenuSelection[client] = menuSelection;
 
     char format[64];
     GetPreferenceFormat(false, preference, format, sizeof(format));
@@ -40,8 +43,8 @@ public Action Timer_InputTimeout(Handle timer, int userid)
 	int client = GetClientOfUserId(userid);
 	if (client > 0 && IsClientConnected(client))
 	{
-		ResetWaitForPreferenceChatInputFromClient(client);
 		MHud_PrintToChat(client, "\x07Input timed out!\x01");
+		ResetWaitForPreferenceChatInputFromClient(client, true);
 	}
 }
 
@@ -70,9 +73,9 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
         HandlePreferenceInput(client, InputPreferenceId[client], inputBuffer);
     }
 
-    ResetWaitForPreferenceChatInputFromClient(client);
+    RedisplayPreferencesMenu(client, InputMenuSelection[client]);
 
-    RedisplayPreferencesMenu(client);
+    ResetWaitForPreferenceChatInputFromClient(client);
     return Plugin_Handled;
 }
 
@@ -109,8 +112,13 @@ static void HandlePreferenceInput(int client, char preferenceId[MHUD_MAX_ID], ch
     PrintChangeMessage(client, preference);
 }
 
-static void ResetWaitForPreferenceChatInputFromClient(int client)
+static void ResetWaitForPreferenceChatInputFromClient(int client, bool fromTimer = false)
 {
-    delete InputTimer[client];
     InputPreferenceId[client] = "";
+    InputMenuSelection[client] = 0;
+
+    if (!fromTimer)
+    {
+        delete InputTimer[client];
+    }
 }
